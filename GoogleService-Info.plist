@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1060196540233-n4d1rfk3kv9l9vlmtli6vvog9ule2v1g.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1060196540233-n4d1rfk3kv9l9vlmtli6vvog9ule2v1g</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAMsR0wrAzOITk8UsOHfYbl7nGOwZAd_6M</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1060196540233</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.zowaaj.app</string>
+	<key>PROJECT_ID</key>
+	<string>zowaaj</string>
+	<key>STORAGE_BUCKET</key>
+	<string>zowaaj.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1060196540233:ios:ea8756aa15be7122c30498</string>
+	<key>DATABASE_URL</key>
+	<string>https://zowaaj-default-rtdb.asia-southeast1.firebasedatabase.app</string>
+</dict>
+</plist>
