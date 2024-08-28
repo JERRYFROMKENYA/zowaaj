@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Progress from "react-native-progress";
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 
 const ReligiosityDetails = (setData:any,setPage:any) => {
   const router = useRouter();
@@ -42,6 +42,39 @@ const ReligiosityDetails = (setData:any,setPage:any) => {
       });
       
     }
+
+    const grabDataAndClose=()=>{
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+        sect,convert,practice,prayer,diet,smoke,tattoos
+      }).then(() => {
+        // console.log('data', timeframe,relocate,children,livingArrangements,icebreaker)
+        router.push('/(tabs)/profile')
+      });
+      
+    }
+
+
+    useEffect(()=>{
+      const docRef = doc(db, "users", auth.currentUser.uid);
+      getDoc(docRef).then((docSnap) => {
+  
+  if (docSnap.exists()) {
+    // router.replace('profileDetailstwo')
+    setSect(docSnap.data().sect)
+    setConvert(docSnap.data().convert)
+    setPractice(docSnap.data().practice)
+    setPrayer(docSnap.data().prayer)
+    setDiet(docSnap.data().diet)
+    setSmoke(docSnap.data().smoke)
+    setTattoos(docSnap.data().tattoos)
+    
+ 
+  
+  } else {
+    // docSnap.data() will be undefined in this case
+    console.log("No such document!");
+  }})
+    },[1])
   
 
   const renderSelectInput = (value, placeholder, onPress, iconName) => (
@@ -238,19 +271,29 @@ const ReligiosityDetails = (setData:any,setPage:any) => {
           </View>
         </Modal>
 
-        <TouchableOpacity style={styles.nextButton} onPress={() => {
-           grabData()
-          // router.push('profilesScreenthree')
-        
-        }}
-          >
-          <Text style={styles.nextButtonText}>Next</Text>
-        </TouchableOpacity>
+        <View style={{
+  flexDirection: 'row',
+  padding: 20}}>
 
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>2/7</Text>
-          <Progress.Bar progress={0.28} unfilledColor='#E9E9E9' borderColor='#e9e9e9' height={10} color='#43CEBA' width={null} style={{ width: '100%' }} />
-        </View>
+<TouchableOpacity style={{ width: 95, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabData()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Next
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={{ width: 100, backgroundColor: '#CE8D43', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabDataAndClose()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Close
+          </Text>
+        </TouchableOpacity>
+</View>
       </View>
     </ScrollView>
   );

@@ -1,31 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Progress from "react-native-progress"
 import { router } from 'expo-router';
+import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db, auth } from './firebaseConfig';
 const AddPhotosScreen = (setData:any,setPage:any) => {
-  const [photos, setPhotos] = useState([null, null, null, null, null, null]);
+  const [photos, setPhotos] = useState([null,null,null,null,null,null]);
+  const storage = getStorage(); // Initialize photos as an empty array
+  const [loading, setLoading] = useState(false);
 
+
+
+ 
   const handlePhotoUpload = async (index) => {
     try {
-      let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        alert('Permission to access photos is required!');
-        return;
-      }
-
-      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: [4, 3],
         quality: 1,
       });
 
-      if (!pickerResult.cancelled) {
+      if (!result.canceled) {
         const newPhotos = [...photos];
-        newPhotos[index] = pickerResult.uri;
+        newPhotos[index] = result.assets?.[0].uri;
         setPhotos(newPhotos);
+        console.log(newPhotos);
       }
     } catch (error) {
       console.log('Error picking image: ', error);
@@ -43,6 +46,58 @@ const AddPhotosScreen = (setData:any,setPage:any) => {
       </TouchableOpacity>
     ));
   };
+  
+  async function uploadImageAsync(uri,i) {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        console.log(e);
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
+  
+    const fileRef = ref(getStorage(), `users/${auth.currentUser?.uid}/photos/${i}`);
+    const result = await uploadBytes(fileRef, blob);
+    console.log("Uploaded a blob or file!", result);
+  
+    // We're done with the blob, close and release it
+    blob.close();
+  
+    return await getDownloadURL(fileRef);
+  }
+
+
+const grabData = async () => {
+    for (let i = 0; i < photos.length; i++) {
+      if (photos.length < 2) {
+        alert('Please upload atleast 2 photos');
+        return;
+      }
+      if (photos[i] === null) {
+        continue;
+      }
+      setLoading(true);
+
+      const downloadURL = await uploadImageAsync(photos[i],i);
+
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+        [`photos.${i}`]: downloadURL
+      }).then(() => {
+        setLoading(false);
+       
+      });
+    }
+    router.push('profileDetailsSeven')
+
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -54,7 +109,9 @@ const AddPhotosScreen = (setData:any,setPage:any) => {
 
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={()=>router.push('profileDetailsSeven')}
+        onPress={()=>{
+          grabData()
+         }}
         // onPress={() => {
         //   // Check if at least 2 photos are uploaded
         //   const uploadedPhotos = photos.filter(photo => photo !== null);

@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Progress from "react-native-progress";
-import { doc, updateDoc } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 
 const profileScreenthree = (setData:any,setPage:any) => {
   const router = useRouter();
@@ -40,15 +40,44 @@ const profileScreenthree = (setData:any,setPage:any) => {
     </TouchableOpacity>
   );
 
+  useEffect(()=>{
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((docSnap) => {
+
+if (docSnap.exists()) {
+  console.log("Document data:", docSnap.data());
+  setTimeframe(docSnap.data().timeframe)
+  setRelocate(docSnap.data().relocate)
+  setChildren(docSnap.data().children)
+  setLivingArrangements(docSnap.data().livingArrangements)
+  setIcebreaker(docSnap.data().icebreaker)
+
+} else {
+  // docSnap.data() will be undefined in this case
+  console.log("No such document!");
+}})
+  },[1])
+
   const grabData=()=>{
     updateDoc(doc(db, "users", auth.currentUser.uid), {
      timeframe,relocate,children,livingArrangements,icebreaker
     }).then(() => {
       console.log('data', timeframe,relocate,children,livingArrangements,icebreaker)
-      router.push('profileDetailsfour')
+      router.push('/profileDetailsfour')
     });
-    
   }
+
+    const grabDataAndClose=()=>{
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+       timeframe,relocate,children,livingArrangements,icebreaker
+      }).then(() => {
+        console.log('data', timeframe,relocate,children,livingArrangements,icebreaker)
+        router.push('/(tabs)/profile')
+      });
+  }
+
+
+
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -162,18 +191,34 @@ const profileScreenthree = (setData:any,setPage:any) => {
           </View>
         </Modal>
 
-        <TouchableOpacity style={styles.nextButton} onPress={() =>grabData()}>
-          <Text style={styles.nextButtonText}>Next</Text>
-        </TouchableOpacity>
+        <View style={{
+  flexDirection: 'row',
+  padding: 20}}>
 
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>3/7</Text>
-          <Progress.Bar progress={0.42} unfilledColor='#E9E9E9' borderColor='#e9e9e9' height={10} color='#43CEBA' width={null} style={{ width: '100%' }} />
-        </View>
+<TouchableOpacity style={{ width: 95, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabData()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Next
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={{ width: 100, backgroundColor: '#CE8D43', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabDataAndClose()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Close
+          </Text>
+        </TouchableOpacity>
+</View>
       </View>
     </ScrollView>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
   container: {

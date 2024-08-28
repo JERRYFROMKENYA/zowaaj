@@ -6,10 +6,11 @@ import googleicon from "../assets/images/googleicon.png"
 import { Redirect, useRouter } from 'expo-router'
 import { Fontisto, Ionicons } from '@expo/vector-icons'
 import { useAuth } from './providers/AuthProvider'
+import {auth} from './firebaseConfig'
 const signup = () => {
   const { isAuthenticated, user } = useAuth()
   console.log(user)
-  if (isAuthenticated) {
+  if (!auth.currentUser?.emailVerified && auth.currentUser) {
     return <Redirect href="profileDetailsone" />;
   }
   const router = useRouter()

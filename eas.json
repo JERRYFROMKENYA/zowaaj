@@ -1,21 +1,24 @@
 {
-  "cli": {
-    "version": ">= 7.8.5"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
-    "production": {},
-    "adhoc": {
-      "distribution": "internal"
-  }
-},
-  "submit": {
-    "production": {}
-  }
+	"cli": {
+		"version": ">= 7.8.5"
+	},
+	"build": {
+		"development": {
+			"developmentClient": true,
+			"distribution": "internal",
+			"android": {
+				"gradleCommand": ":app:assembleDebug"
+			},
+			"ios": {
+				"buildConfiguration": "Debug"
+			}
+		},
+		"preview": {
+			"distribution": "internal"
+		},
+		"production": {}
+	},
+	"submit": {
+		"production": {}
+	}
 }

@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Progress from "react-native-progress";
-import { doc, updateDoc } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
+import { useEffect } from 'react';
 
 const LanguageEthnicityEducationCareer = (setData:any,setPage:any) => {
   const router = useRouter();
@@ -45,17 +46,47 @@ const LanguageEthnicityEducationCareer = (setData:any,setPage:any) => {
       <Text style={styles.modalItemText}>{item}</Text>
     </TouchableOpacity>
   );
+  
+  useEffect(()=>{
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((docSnap) => {
+
+if (docSnap.exists()) {
+  console.log("Document data:", docSnap.data());
+  setLanguage(docSnap.data().language)
+  setEthnicGroup(docSnap.data().ethnicGroup)
+  setEthnicOrigin(docSnap.data().ethnicOrigin)
+  setBiography(docSnap.data().biography)
+  setProfession(docSnap.data().profession)
+  setEducation(docSnap.data().education)
+  setJobTitle(docSnap.data().jobTitle)
+
+} else {
+  // docSnap.data() will be undefined in this case
+  console.log("No such document!");
+}})
+  },[1])
 
 
   const grabData=()=>{
     updateDoc(doc(db, "users", auth.currentUser.uid), {
-      language, ethnicGroup, ethnicOrigin, biography, profession, education, jobTitle
+      language, ethnicGroup, biography, profession, education, jobTitle
     }).then(() => {
-      console.log('data', language, ethnicGroup, ethnicOrigin, biography, profession, education, jobTitle)
+      console.log('data', language, ethnicGroup, biography, profession, education, jobTitle)
       router.push('profileDetailsFive')
     });
     
   }
+
+
+  const grabDataAndClose=()=>{
+    updateDoc(doc(db, "users", auth.currentUser.uid), {
+      language, ethnicGroup, biography, profession, education, jobTitle
+    }).then(() => {
+      // console.log('data', timeframe,relocate,children,livingArrangements,icebreaker)
+      router.push('/(tabs)/profile')
+    });
+}
 
 
   return (
@@ -222,14 +253,29 @@ const LanguageEthnicityEducationCareer = (setData:any,setPage:any) => {
           </View>
         </Modal>
 
-        <TouchableOpacity style={styles.nextButton} onPress={() => grabData()}>
-          <Text style={styles.nextButtonText}>Next</Text>
-        </TouchableOpacity>
+        <View style={{
+  flexDirection: 'row',
+  padding: 20}}>
 
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>4/7</Text>
-          <Progress.Bar progress={0.57} unfilledColor='#E9E9E9' borderColor='#e9e9e9' height={10} color='#43CEBA' width={null} style={{ width: '100%' }} />
-        </View>
+<TouchableOpacity style={{ width: 95, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabData()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Next
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={{ width: 100, backgroundColor: '#CE8D43', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabDataAndClose()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Close
+          </Text>
+        </TouchableOpacity>
+</View>
       </View>
     </ScrollView>
   );

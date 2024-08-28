@@ -4,9 +4,7 @@ import { supabase } from './lib/supabase';
 import Button from './components/Button';
 // import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
-import {BASE_URL} from '@env'
-import axios from 'axios'
-import * as Device from 'expo-device';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Auth() {
   const[error, setError] = useState({email:"", password:""})
@@ -14,54 +12,41 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const auth = getAuth();
 
   async function signInWithEmail() {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (error) Alert.alert(error.message);
+  setLoading(true); 
+  signInWithEmailAndPassword(auth, email, password)
+  .then((userCredential) => {
+    // Signed in 
+    const user = userCredential.user;
+    console.log(user);
+    router.replace('/(tabs)/home');
+    // ...
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    console.log(errorMessage);
+  });
     setLoading(false);
   }
 
   async function signUpWithEmail() {
     setLoading(true);
-    setError({email:"", password:""})
-    console.log(email, password)
-    await axios.post(`${BASE_URL}/api/register`, {
-      email: email,
-      password: password,
-      deviceName: Device.modelName
-    }).then((response) => {
-      console.log(response.data)
-
-      if(response.data.status){
-        Alert.alert("Welcome to Zowaaj")
-        router.push('/onboarding')
-      }
-      else{
-        console.log(response.data.message)
-      setError({email:response.data.message?.email?.[0], password:response.data.message?.password?.[0]})
-      }
-    })
-
-
-
-
-
-
-    // const {
-    //   data: { session },
-    //   error,
-    // } = await supabase.auth.signUp({
-    //   email: email,
-    //   password: password,
-    // });
-
-    // if (error) Alert.alert(error.message);
-    // setLoading(false);
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed up 
+        const user = userCredential.user;
+        // ...
+        setLoading(false);
+        router.replace('/profileDetailsone');
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // ..
+      });
   }
 
   return (
@@ -95,14 +80,14 @@ export default function Auth() {
         <Button
           title="Sign in"
           disabled={loading}
-          onPress={() => signInWithEmail()}
+          onPress={async () => await signInWithEmail()}
         />
       </View>
       <View style={styles.verticallySpaced}>
         <Button
           title="Sign up"
           disabled={loading}
-          onPress={() => signUpWithEmail()}
+          onPress={async () => await signUpWithEmail()}
         />
       </View>
     </View>

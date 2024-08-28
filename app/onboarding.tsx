@@ -10,13 +10,19 @@ import ProfileDetailsSeven from './profileDetailsSeven'
 function Onboarding() {
 
     const [page, setPageNo] = React.useState(0)
-    const [data, setData] = React.useState({})
+    const [dataNode, setDataNode] = React.useState({})
 
     const setPage=()=>{
         setPageNo(page+1)
     }
 
-    const pages=[<ProfileDetailsone setPage={setPage} setData={setData} />, 
+    const setData=(data:any)=>{
+      setDataNode({...dataNode, ...data})
+      console.log(dataNode)
+
+    }
+
+    const pages=[<ProfileDetailsone setPage={setPage} setData={setData}/>, 
     <ProfileDetailstwo setPage={setPage} setData={setData}/>, 
     <ProfileScreenthree setPage={setPage} setData={setData}/> ,
     <ProfileDetailsfour setPage={setPage} setData={setData}/>,

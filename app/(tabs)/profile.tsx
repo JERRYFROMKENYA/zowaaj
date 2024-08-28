@@ -3,32 +3,71 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, Switch, SafeAreaView, 
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
-import { AdvancedImage, upload, UploadApiOptions } from "cloudinary-react-native";
 import Toast from 'react-native-toast-message';
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { byRadius } from "@cloudinary/url-gen/actions/roundCorners";
 import { focusOn } from "@cloudinary/url-gen/qualifiers/gravity";
 import { FocusOn } from "@cloudinary/url-gen/qualifiers/focusOn";
 import { cld } from '../lib/cloudinary';
-import { supabase } from '../lib/supabase';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 
 const ProfileScreen = () => {
+
   const [profileImage, setProfileImage] = useState(null);
   const [bannerImage, setBannerImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
   const router = useRouter();
 
+  const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((docSnap) => {
+
+
+if (docSnap.exists()) {
+  setName(docSnap.data().firstName+" "+docSnap.data().lastName)
+  setLocation(docSnap.data().jobTitle);
+  // router.replace('profileDetailstwo')
+} else {
+  // docSnap.data() will be undefined in this case
+  console.log("No such document!");
+}})
+async function uploadImageAsync(uri,i) {
+  // Why are we using XMLHttpRequest? See:
+  // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+  const blob = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+      resolve(xhr.response);
+    };
+    xhr.onerror = function (e) {
+      console.log(e);
+      reject(new TypeError("Network request failed"));
+    };
+    xhr.responseType = "blob";
+    xhr.open("GET", uri, true);
+    xhr.send(null);
+  });
+
+  const fileRef = ref(getStorage(), `users/${auth.currentUser?.uid}/photos/${i}`);
+  const result = await uploadBytes(fileRef, blob);
+  console.log("Uploaded a blob or file!", result);
+
+  // We're done with the blob, close and release it
+  blob.close();
+
+  return await getDownloadURL(fileRef);
+}
+
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error.message);
-      Toast.show({
-        type: 'error',
-        text1: 'Logout Error',
-        text2: error.message,
-      });
-    } else {
+    signOut(auth) // Pass the auth object as an argument
+    .then(() => {
       console.log('Successfully logged out');
+      router.replace('/signup');
       Toast.show({
         type: 'success',
         text1: 'Logged Out',
@@ -38,8 +77,37 @@ const ProfileScreen = () => {
           router.replace('/');
         }
       });
-    }
+    })
+    .catch((error) => {
+      console.error('Error logging out:', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Error',
+        text2: error.message,
+      });
+    });
   };
+  
+  
+useEffect(()=>{
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((docSnap) => {
+if (docSnap.exists()) {
+const currentPhotos: string[] = Object.values(docSnap.data().photos)
+
+
+if(currentPhotos.length>0){
+  console.log(docSnap.data().photos)
+  setProfileImage(currentPhotos[0])
+  setBannerImage(currentPhotos[1])
+
+}
+}
+ else {
+  // docSnap.data() will be undefined in this case
+  console.log("No such document!");
+}})
+  },[1])
 
   const myProfileImage = cld.image("profileimages/your_profile_image_id");
   const userBannerImage = cld.image("profileimages/file_byouqy");
@@ -59,6 +127,7 @@ const ProfileScreen = () => {
 
     if (!result.canceled) {
       setProfileImage(result.assets[0].uri);
+      uploadProfileImage(result.assets[0].uri)
     }
   };
 
@@ -75,53 +144,32 @@ const ProfileScreen = () => {
     });
 
     if (!result.canceled) {
-      setBannerImage(result.assets[0].uri);
+      setBannerImage(result.assets[0].uri)
+      uploadBannerImage(result.assets[0].uri)
     }
   };
 
   const uploadProfileImage = async (file) => {
-    const options = {
-      upload_preset: 'default',
-      unsigned: true,
-      resource_type: 'auto',
-    };
-
-    return new Promise(async (resolve, reject) => {
-      await upload(cld, {
-        file,
-        options: options,
-        callback: (error, response) => {
-          if (error || !response) {
-            reject(error);
-          } else {
-            resolve(response);
-          }
-        },
+    setLoading(true)
+   const downloadURL = await uploadImageAsync(file,0);
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+        [`photos.${0}`]: downloadURL
+      }).then(() => {
+        setLoading(false);
+        router.push('/(tabs)/profile')
       });
-    });
   };
 
-  const uploadBannerImage = async () => {
-    if (!bannerImage) return;
+  const uploadBannerImage = async (file) => {
+    setLoading(true)
+    const downloadURL = await uploadImageAsync(file,1);
 
-    const options = {
-      upload_preset: 'default',
-      unsigned: true,
-    };
-
-    return new Promise(async (resolve, reject) => {
-      await upload(cld, {
-        file: bannerImage,
-        options: options,
-        callback: (error, response) => {
-          if (error || !response) {
-            reject(error);
-          } else {
-            resolve(response);
-          }
-        },
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+        [`photos.${1}`]: downloadURL
+      }).then(() => {
+        setLoading(false);
+        router.push('/(tabs)/profile')
       });
-    });
   };
 
   return (
@@ -132,23 +180,21 @@ const ProfileScreen = () => {
           <TouchableOpacity onPress={pickBannerImage}>
             <Image source={{ uri: bannerImage }} style={{ height: 200, objectFit: 'cover' }} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={uploadBannerImage}>
-            <Text>Upload Banner Image</Text>
-          </TouchableOpacity>
+          
 
           <View style={styles.profileInfo}>
             <TouchableOpacity onPress={pickProfileImage}>
-              <AdvancedImage cldImg={myProfileImage} style={styles.profileImage} />
+              <Image source={{uri: profileImage}} style={styles.profileImage} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => uploadProfileImage(profileImage)}>
-              <Text>Update Profile Image</Text>
-            </TouchableOpacity>
-            <Text style={styles.name}>Ganesha Kencana</Text>
-            <Text style={styles.location}>Los Angeles, CA - 1.7km</Text>
+            
+             
+           
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.location}>{location}</Text>
           </View>
 
           <View style={styles.settingsSection}>
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity style={styles.settingItem} onPress={()=>{router.push('/(account)/profileDetailsone')}}>
               <Ionicons name="person-outline" size={24} color="#20B2AA" />
               <Text style={styles.settingText}>My Account</Text>
               <Ionicons name="chevron-forward" size={24} color="#ccc" />

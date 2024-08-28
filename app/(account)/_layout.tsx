@@ -7,11 +7,11 @@ import * as eva from '@eva-design/eva';
 import { Image, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-import backButton from "../assets/images/backarrow.png";
+import backButton from "../../assets/images/backarrow.png";
 import {GestureHandlerRootView} from "react-native-gesture-handler"
 
-import { Customback } from './(tabs)/matches';
-import AuthProvider from './providers/AuthProvider';
+import { Customback } from '../(tabs)/matches';
+import AuthProvider from '../providers/AuthProvider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,7 +28,7 @@ const CustomBackButton = () => {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -45,9 +45,6 @@ export default function RootLayout() {
   <GestureHandlerRootView>
       <AuthProvider>
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name='signup' options={{ headerShown: false }} />
-        <Stack.Screen name='(account)' options={{ headerShown: false }} />
         <Stack.Screen
           name='profileDetailsone'
           options={{
@@ -104,20 +101,6 @@ export default function RootLayout() {
             headerLeft: () => <CustomBackButton />
           }}
         />
-        <Stack.Screen
-          name='profileDetailsSeven'
-          options={{
-            headerShadowVisible: false,
-            headerTitleAlign: 'center',
-            headerTitle: 'Verify who you are',
-            headerLeft: () => <CustomBackButton />
-          }}
-        />
-        <Stack.Screen name='notificationscreen' options={{ headerTitle: 'Notification', headerTitleAlign: 'center', headerLeft: () => <Customback /> }} />
-        <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-        <Stack.Screen name='(messaging)' options={{ headerShown: false }} />
-        
-
       </Stack>
     </AuthProvider>
   </GestureHandlerRootView>

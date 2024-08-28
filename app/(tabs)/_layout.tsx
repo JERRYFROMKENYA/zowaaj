@@ -7,13 +7,24 @@ import marriageIcon from '../../assets/images/homeicon.png';
 import matchesIcon from '../../assets/images/matches.png';
 import messageIcon from '../../assets/images/message.png';
 import profileIcon from '../../assets/images/profile.png';
+import backButton from "../../assets/images/backarrow.png";
 
 import notificationIcon from "../../assets/images/notificationicon.png";
 import filterIcon from "../../assets/images/filtericon.png";
 import { useAuth } from '../providers/AuthProvider';
 
+const CustomBackButton = () => {
+  const router = useRouter();
+  return (
+    <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 10 }}>
+      <Image source={backButton} style={{ height: 38, width: 38, objectFit: 'contain' }} />
+    </TouchableOpacity>
+  );
+};
+
 const _layout = () => {
   const router = useRouter();
+  
 
   return (
     <Tabs
@@ -101,7 +112,13 @@ const _layout = () => {
           ),
         }}
       />
-      <Tabs.Screen name='profiledetail/[id]' options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name='profiledetail/[id]' options={{ headerShadowVisible: false,
+            headerTitleAlign: 'center',
+            headerTitle: '',
+            headerLeft: () => <CustomBackButton />,
+            href: null,
+            // headerShown: false 
+            }} />
       {/* <Tabs.Screen name='profile/[id]' options={{ href: null, headerShown: false }} /> */}
       {/* <Tabs.Screen name='[profile]/page' options={{ href: null, headerShown: false }} /> */}
     </Tabs>

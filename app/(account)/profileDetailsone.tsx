@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Progress from "react-native-progress"
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from './firebaseConfig';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebaseConfig';
 
 //TODO
 
@@ -21,9 +21,9 @@ const ProfileDetailsone = (props:{
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [height, setHeight] = useState('');
-  const [gender, setGender] = useState('');
-  const [maritalStatus, setMaritalStatus] = useState('');
-  const [children, setChildren] = useState('');
+  const [gender, setGender] = useState('Male');
+  const [maritalStatus, setMaritalStatus] = useState('Single');
+  const [children, setChildren] = useState('No children');
   const [tagline, setTagline] = useState('');
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showMaritalModal, setShowMaritalModal] = useState(false);
@@ -34,12 +34,22 @@ const ProfileDetailsone = (props:{
     getDoc(docRef).then((docSnap) => {
 
 if (docSnap.exists()) {
-  router.replace('profileDetailstwo')
+  // router.replace('profileDetailstwo')
+setFirstName(docSnap.data().firstName)
+setLastName(docSnap.data().lastName)
+setDateOfBirth(docSnap.data().dateOfBirth)
+setPhoneNumber(docSnap.data().phoneNumber)
+setHeight(docSnap.data().height)
+setGender(docSnap.data().gender);
+setMaritalStatus(docSnap.data().maritalStatus);
+// setChildren(docSnap.data().children);
+setTagline(docSnap.data().tagline);
+
 } else {
   // docSnap.data() will be undefined in this case
   console.log("No such document!");
 }})
-  })
+  },[1])
 
 
   const genderOptions = [
@@ -61,11 +71,20 @@ if (docSnap.exists()) {
 
 
   const grabData=()=>{
-    setDoc(doc(db, "users", auth.currentUser.uid), {
-      firstName,lastName,dateOfBirth,phoneNumber,height,maritalStatus,tagline,gender
+    updateDoc(doc(db, "users", auth.currentUser.uid), {
+      firstName,lastName,dateOfBirth,phoneNumber,height,gender,maritalStatus,tagline
     }).then(() => {
       console.log('data',firstName,lastName,dateOfBirth,phoneNumber,height)
       router.push('profileDetailstwo')
+    });
+    
+  }
+  const grabDataAndClose=()=>{
+    updateDoc(doc(db, "users", auth.currentUser.uid), {
+      firstName,lastName,dateOfBirth,phoneNumber,height,gender,maritalStatus,tagline
+    }).then(() => {
+      console.log('data',firstName,lastName,dateOfBirth,phoneNumber,height)
+      router.push('(tabs)/profile')
     });
     
   }
@@ -101,10 +120,10 @@ if (docSnap.exists()) {
       <View>
         <Text style={styles.headerText}>About you</Text>
         <View style={styles.inputContainer}>
-          <TextInput placeholder='First Name' placeholderTextColor={'#878787'} style={styles.input} onChangeText={(text) => setFirstName(text)} />
-          <TextInput placeholder='Last Name' placeholderTextColor={'#878787'} style={styles.input} onChangeText={(text) => setLastName(text)} />
+          <TextInput placeholder='First Name' placeholderTextColor={'#878787'} style={styles.input} value={firstName} onChangeText={(text) => setFirstName(text)} />
+          <TextInput placeholder='Last Name' placeholderTextColor={'#878787'} style={styles.input} value={lastName} onChangeText={(text) => setLastName(text)} />
 
-          {renderSelectInput(gender, 'Your Gender', () => setShowGenderModal(true))}
+          {renderSelectInput(gender, 'Your Gender', () => setShowGenderModal(false))}
 
           <TextInput
             placeholder='Date Of birth'
@@ -112,6 +131,7 @@ if (docSnap.exists()) {
             style={styles.input}
             keyboardType="numeric"
             onChangeText={(text) => setDateOfBirth(text)}
+            value={dateOfBirth}
           />
           {/* <TextInput
             placeholder='Email'
@@ -125,6 +145,7 @@ if (docSnap.exists()) {
             style={styles.input}
             keyboardType="phone-pad"
             onChangeText={(text) => setPhoneNumber(text)}
+            value={phoneNumber}
           />
 
           <TextInput
@@ -133,6 +154,7 @@ if (docSnap.exists()) {
             style={styles.input}
             keyboardType="numeric"
             onChangeText={(text) => setHeight(text)}
+            value={height}
           />
 
           {renderSelectInput(maritalStatus, 'Marital Status', () => setShowMaritalModal(true))}
@@ -146,6 +168,7 @@ if (docSnap.exists()) {
             multiline={true}
             numberOfLines={3}
             onChangeText={(text) => setTagline(text)}
+            value={tagline}
           />
         </View>
 
@@ -217,8 +240,12 @@ if (docSnap.exists()) {
             </View>
           </View>
         </Modal>
+<View style={{
+  flexDirection: 'row',
+  padding: 20
+}}>
 
-        <TouchableOpacity style={{ width: 95, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+<TouchableOpacity style={{ width: 95, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
         onPress={() => {
           grabData()
          
@@ -227,12 +254,22 @@ if (docSnap.exists()) {
             Next
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity style={{ width: 100, backgroundColor: '#CE8D43', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabDataAndClose()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Close
+          </Text>
+        </TouchableOpacity>
+</View>
 
         {/* progress bar */}
-        <View style={{ paddingHorizontal:16,  marginTop: 20, marginBottom:40 }} >
+        {/* <View style={{ paddingHorizontal:16,  marginTop: 20, marginBottom:40 }} >
           <Text style={{ fontSize: 18, color: 'black', fontWeight: 'semibold' }}>1/7</Text>
           <Progress.Bar progress={0.14} unfilledColor='#E9E9E9' borderColor='#e9e9e9' width={null} borderRadius={52}  height={10} color='#43CEBA' />
-        </View>
+        </View> */}
       </View>
 
     </ScrollView>

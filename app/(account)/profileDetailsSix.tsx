@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import * as Progress from "react-native-progress"
+import { getDownloadURL, getStorage, ref, uploadBytes, uploadBytesResumable } from "firebase/storage";
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
-import { updateDoc, doc } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db } from './firebaseConfig';
-const VerificationScreen = (setData:any,setPage:any) => {
-  const [photos, setPhotos] = useState([null,null]);
+
+
+const AddPhotosScreen = (setData:any,setPage:any) => {
+  const [photos, setPhotos] = useState([null,null,null,null,null,null]);
   const storage = getStorage(); // Initialize photos as an empty array
   const [loading, setLoading] = useState(false);
 
 
 
- 
+  useEffect(()=>{
+    const docRef = doc(db, "users", auth.currentUser.uid);
+    getDoc(docRef).then((docSnap) => {
+if (docSnap.exists()) {
+const currentPhotos: string[] = Object.values(docSnap.data().photos)
+
+
+if(currentPhotos.length>0){
+  console.log(docSnap.data().photos)
+  setPhotos(currentPhotos)
+
+}
+}
+ else {
+  // docSnap.data() will be undefined in this case
+  console.log("No such document!");
+}})
+  },[1])
+
   const handlePhotoUpload = async (index) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,7 +83,7 @@ const VerificationScreen = (setData:any,setPage:any) => {
       xhr.send(null);
     });
   
-    const fileRef = ref(getStorage(), `users/${auth.currentUser?.uid}/verification/${i}`);
+    const fileRef = ref(getStorage(), `users/${auth.currentUser?.uid}/photos/${i}`);
     const result = await uploadBytes(fileRef, blob);
     console.log("Uploaded a blob or file!", result);
   
@@ -78,53 +97,72 @@ const VerificationScreen = (setData:any,setPage:any) => {
 const grabData = async () => {
     for (let i = 0; i < photos.length; i++) {
       if (photos.length < 2) {
-        alert('Please upload ID card and selfie');
+        alert('Please upload atleast 2 photos');
         return;
-      }
-      if (photos[i] === null) {
-        continue;
       }
       setLoading(true);
 
       const downloadURL = await uploadImageAsync(photos[i],i);
 
-      updateDoc(doc(db, "users", auth.currentUser?.uid), {
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
         [`photos.${i}`]: downloadURL
       }).then(() => {
         setLoading(false);
-       
+        router.push('/(tabs)/profile')
       });
     }
-    updateDoc(doc(db, "users", auth.currentUser?.uid), {
-      verification:"pending",
-      accountType:"free"
-    }).then(() => {
-      setLoading(false);
-     
-    });
-    router.push('/(tabs)/home')
+
   }
+  const grabDataAndClose = async () => {
+    for (let i = 0; i < photos.length; i++) {
+      if (photos.length < 2) {
+        alert('Please upload atleast 2 photos');
+        return;
+      }
+      setLoading(true);
+
+      const downloadURL = await uploadImageAsync(photos[i],i);
+
+      updateDoc(doc(db, "users", auth.currentUser.uid), {
+        [`photos.${i}`]: downloadURL
+      }).then(() => {
+        setLoading(false);
+        router.push('/(tabs)/profile')
+      });
+    }
+
+  }
+
+
+
+
+
+
+
+
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.headerText}>In order to verify your identity, we require a valid ID card / Passport and a selfie to be uploaded through the APP.
-      </Text>
-      
+      <Text style={styles.headerText}>Add at least 2 photos to continue</Text>
+
       <View style={styles.photosContainer}>
         {renderPhotoInputs()}
       </View>
-      <Text style={styles.headerText}>
-        You will be able to connect with contacts once your profile has been approved.
-      </Text>
-      <TouchableOpacity
-        style={styles.nextButton}
-        onPress={() => grabData()}>
-        <Text style={styles.nextButtonText}>Next</Text>
-      </TouchableOpacity>
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressText}>7/7</Text>
-        <Progress.Bar progress={1} unfilledColor='#E9E9E9' borderColor='#e9e9e9' height={10} color='#43CEBA' width={null} style={{ width: '100%' }} />
-      </View>
+
+      <View style={{
+  flexDirection: 'row',
+  padding: 20}}>
+
+<TouchableOpacity style={{ width: 100, backgroundColor: '#43CEBA', display: 'flex', paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, borderRadius: 14, marginTop: 20, gap: 10, alignSelf: 'flex-end', marginRight: 16 }} 
+        onPress={() => {
+          grabData()
+         
+        }} >
+          <Text style={{ fontWeight: 'semibold', fontSize: 14, color: 'white', }} >
+            Close
+          </Text>
+        </TouchableOpacity>
+</View>
     </ScrollView>
   );
 };
@@ -193,4 +231,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VerificationScreen;
+export default AddPhotosScreen;
