@@ -18,6 +18,9 @@ const HomeScreen = () => {
   // const[genderPreferece, setGenderPreference] = React.useState("");
   
   useEffect(() => {
+    if (!auth.currentUser) {
+      return <Redirect href="/emailPasswordsignup" />;
+    }
    
 
   const docRef = doc(db, "users", auth.currentUser.uid);
