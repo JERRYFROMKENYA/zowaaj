@@ -1,4 +1,5 @@
-import React from 'react';
+import { fetchNotifications } from '@/components/reusables/reusables';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 
 const data = [
@@ -12,6 +13,9 @@ const data = [
   { id: '8', name: 'Jusrin Yusman', action: 'followed you', time: '5 minutes ago', section: 'This Week', following: true },
   { id: '9', name: 'Ngateno Sam', action: 'followed you', time: '5 minutes ago', section: 'This Week', following: true },
 ];
+
+
+
 
 const ActivityItem = ({ item }) => (
   <View style={styles.itemContainer}>
@@ -29,8 +33,38 @@ const ActivityItem = ({ item }) => (
 );
 
 const ActivityScreen = () => {
+  const [data, setData] = React.useState([]);
+  const getData= async () =>{
+  fetchNotifications().then((data) => {
+    setData(data || []);
+  });
+  console.log(data);
+  };
+  useEffect(() => {
+    getData();
+  }, []);
+
+ 
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchNotifications();
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
-    
     <View style={styles.container}>
       <Text style={styles.headerText}>Recent</Text>
       <FlatList

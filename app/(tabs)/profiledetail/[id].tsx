@@ -7,7 +7,7 @@ import match from '../../../assets/images/match.png';
 import stared from '../../../assets/images/stared.png';
 import { db, auth } from '@/app/firebaseConfig';
 import { addDoc, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
-import { notify } from '@/components/reusables/reusables';
+import { notify, sendNotification } from '@/components/reusables/reusables';
 
 const { width, height } = Dimensions.get('window');
 function findValue(arr: any[], key: any){
@@ -41,6 +41,7 @@ const matchAction = async (uid) => {
       updateDoc(docRef, {
         matchedProfiles: matchedProfiles
       });
+      sendNotification(uid, "Match", "You have been matched");
     }
   }
   checkMatches(uid);
@@ -113,6 +114,7 @@ const checkMatches = async (uid) => {
            updateDoc(docRef2, {
             chats: chats2});
             console.log(docRef3.id);
+            sendNotification(uid, "Match", "Send a message to your match");
       return true;
      }
 
@@ -131,6 +133,7 @@ const starredAction = async (uid) => {
       updateDoc(docRef, {
         starredProfiles: starredProfiles
       });
+      sendNotification(uid, "Starred", "You have been starred");
     }
   }
 
